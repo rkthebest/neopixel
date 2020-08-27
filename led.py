@@ -47,13 +47,13 @@ CYAN = (0, 255, 255)
 BLUE = (0, 0, 255)
 PURPLE = (180, 0, 255)
 i = 0
-pixels.fill(CYAN)
+pixels.fill(RED)
 pixels.show()
 while True:
     for x in range(num_points):
-        pwm = 0.3 * (1.0 - abs((2.0*(x/num_points))-1.0))
+        bright = 0.3 * (1.0 - abs((2.0*(x/num_points))-1.0))
         #print(pwm,"\n")
-        pixels.brightness = pwm
+        pixels.brightness = bright
         pixels.show()
         time.sleep(0.01)
     #rainbow_cycle(0)  # Increase the number to slow down the rainbow

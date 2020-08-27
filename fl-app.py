@@ -3,7 +3,11 @@
 from flask import request
 from flask_api import FlaskAPI
 import board
+import threading
 import neopixel
+import time
+
+num_points = 150
 
 RED = (255, 0, 0)
 YELLOW = (255, 150, 0)
@@ -23,6 +27,9 @@ num_pixels = 9
 ORDER = neopixel.GRB
 
 pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=0.1, auto_write=False, pixel_order=ORDER)
+pixels.fill(OFF)
+pixels.show()
+state = 0
 
 def wheel(pos):
     # Input a value 0 to 255 to get a color value.
@@ -46,6 +53,25 @@ def wheel(pos):
     return (r, g, b) if ORDER in (neopixel.RGB, neopixel.GRB) else (r, g, b, 0)
 
 app = FlaskAPI(__name__)
+@app.before_first_request
+def activate_job():
+    def run_job():
+        global state
+        while True:
+            for x in range(num_points):
+                if state == 0:
+                    bright = 0
+                elif state == 1:
+                    bright = 0.3
+                else:
+                    bright = 0.3 * (1.0 - abs((2.0*(x/num_points))-1.0))
+                #print(pwm,"\n")
+                pixels.brightness = bright
+                pixels.show()
+                time.sleep(0.01)
+
+    thread = threading.Thread(target=run_job)
+    thread.start()
 
 @app.route('/', methods=["GET"])
 def api_root():
@@ -53,9 +79,10 @@ def api_root():
            "led_url": request.url + "led/<color>/",
              "led_url_POST": {"state": "(0 | 1)"}
                  }
-  
+
 @app.route('/led/<color>/', methods=["GET", "POST"])
 def api_leds_control(color):
+    global state
     if request.method == "POST":
         if color in LEDS:
             state = int(request.data.get("state"))
@@ -64,5 +91,4 @@ def api_leds_control(color):
     return {color: color}
 
 if __name__ == "__main__":
-    thread.start_new_thread(go,())
     app.run()
